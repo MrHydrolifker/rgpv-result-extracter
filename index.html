@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Data Extraction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8e8e8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Enter Student Data</h1>
+    <textarea id="inputData" placeholder="Enter the student data here..." required></textarea><br><br>
+    <button id="processButton">Process Data</button>
+    <button id="downloadButton">Download as Excel</button>
+
+    <div class="output" id="output"></div>
+</div>
+
+<script>
+    document.getElementById('processButton').addEventListener('click', function() {
+        const inputData = document.getElementById('inputData').value;
+        const output = processText(inputData);
+        document.getElementById('output').innerHTML = output;
+    });
+
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        const inputData = document.getElementById('inputData').value;
+        const data = processTextForExcel(inputData);
+        downloadExcel(data);
+    });
+
+    function processText(input) {
+        // Regular expression to capture data between "Name" and just before "Revaluation"
+        const regex = /Name\s(.*?)\s(?=Revaluation)/gs;
+
+        let result = '';
+        let match;
+
+        // Extract and process all matching segments
+        while ((match = regex.exec(input)) !== null) {
+            result += `
+                
+                <pre>${match[1]}</pre>
+                <hr>
+            `;
+        }
+
+        if (!result) {
+            result = "No matching segments found!";
+        }
+
+        return result;
+    }
+
+    function processTextForExcel(input) {
+        const regex = /Name\s(.*?)\s(?=Revaluation)/gs;
+        const data = [];
+        ;
+        data.push(headers);
+
+        let match;
+        while ((match = regex.exec(input)) !== null) {
+            const studentData = [match[1]];
+            data.push(studentData);
+        }
+
+        return data;
+    }
+
+    function downloadExcel(data) {
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Student Data");
+        XLSX.writeFile(wb, "Student_Data.xlsx");
+    }
+</script>
+
+</body>
+</html>
