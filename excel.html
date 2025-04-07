@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RGPV Result Parser</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    textarea { width: 100%; height: 200px; margin-bottom: 10px; }
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px; }
+    table { width: 100%; margin-top: 20px; }
+    th { background-color: #f2f2f2; }
+    button { padding: 10px 15px; margin-right: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>Paste RGPV Raw Result Below:</h2>
+<textarea id="inputArea" placeholder="Paste your result data here..."></textarea>
+<button onclick="parseResult()">Convert to Table</button>
+<button onclick="downloadExcel()">Download Excel</button>
+
+<div id="output"></div>
+
+<!-- SheetJS library -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<script>
+  function parseResult() {
+    const input = document.getElementById("inputArea").value.trim();
+    const students = input.split(/\n(?=[A-Z]+\s+[A-Z]+)/); // split by name lines
+
+    let html = `<table id="resultTable"><tr>
+      <th>Roll Number</th><th>Name</th>
+      <th>sub1</th><th>sub2</th><th>sub3</th><th>sub4</th><th>sub5</th>
+      <th>sub6</th><th>sub7</th><th>sub8</th><th>sub9</th><th>sub10</th>
+      <th>Result Des.</th><th>SGPA</th><th>CGPA</th></tr>`;
+
+    students.forEach(block => {
+      const nameMatch = block.match(/^([A-Z ]+)\s+Roll No\. (\S+)/);
+      const name = nameMatch?.[1]?.trim() || "";
+      const roll = nameMatch?.[2] || "";
+
+      const gradeLines = block.split('\n').filter(line => /\[\w\]/.test(line) && !/\[N\]/.test(line));
+      const grades = gradeLines.map(line => line.trim().split(/\s+/).pop());
+
+      const resultMatch = block.match(/Result Des\.\s+SGPA\s+CGPA\s*\n([A-Z]+)\s+([\d.]+)\s+([\d.]+)/);
+      const resultDes = resultMatch?.[1] || "";
+      const sgpa = resultMatch?.[2] || "";
+      const cgpa = resultMatch?.[3] || "";
+
+      html += `<tr><td>${roll}</td><td>${name}</td>`;
+      for (let i = 0; i < 10; i++) {
+        html += `<td>${grades[i] || ''}</td>`;
+      }
+      html += `<td>${resultDes}</td><td>${sgpa}</td><td>${cgpa}</td></tr>`;
+    });
+
+    html += "</table>";
+    document.getElementById("output").innerHTML = html;
+  }
+
+  function downloadExcel() {
+    const table = document.getElementById("resultTable");
+    if (!table) return alert("Please convert the data to a table first.");
+
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Results" });
+    XLSX.writeFile(wb, "RGPV_Result.xlsx");
+  }
+</script>
+
+</body>
+</html>
